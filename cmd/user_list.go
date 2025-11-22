@@ -1,33 +1,37 @@
 package cmd
 
 import (
-    "context"
-    "fmt"
-    "time"
+	"fmt"
 
-    "github.com/spf13/cobra"
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 var userListCmd = &cobra.Command{
-    Use:   "list",
-    Short: "List all users",
-    RunE: func(cmd *cobra.Command, args []string) error {
-        ctx, cancel := context.WithTimeout(context.Background(), 8*time.Second)
-        defer cancel()
+	Use:   "list",
+	Short: "List all users",
+	RunE: func(cmd *cobra.Command, args []string) error {
+		fmt.Println("Taking over user list command...")
 
-        users, err := apiClient.ListUsers(ctx)
-        if err != nil {
-            return err
-        }
+		fmt.Printf("Config file: %s\n", viper.ConfigFileUsed())
 
-        fmt.Println("Users:")
-        for _, u := range users {
-            fmt.Printf(" - %s (%s)\n", u.Name, u.ID)
-        }
-        return nil
-    },
+		// Print current config values
+		fmt.Printf("Base URL: %s\n", viper.GetString("base_url"))
+		fmt.Printf("Access Token: %s\n", viper.GetString("access_token"))
+		fmt.Printf("Refresh Token: %s\n", viper.GetString("refresh_token"))
+
+		//config.cfg.AccessToken = "Hello World"
+		viper.Set("access_token", "Hello World")
+		viper.WriteConfig()
+
+		fmt.Printf("Base URL: %s\n", viper.GetString("base_url"))
+		fmt.Printf("Access Token: %s\n", viper.GetString("access_token"))
+		fmt.Printf("Refresh Token: %s\n", viper.GetString("refresh_token"))
+
+		return nil
+	},
 }
 
 func init() {
-    userCmd.AddCommand(userListCmd)
+	userCmd.AddCommand(userListCmd)
 }

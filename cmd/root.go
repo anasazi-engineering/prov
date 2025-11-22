@@ -24,7 +24,10 @@ var rootCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
-		apiClient = api.NewClient(cfg.BaseURL, cfg.Token)
+		apiClient = api.NewClient(cfg.BaseURL, config.Tokens{
+			AccessToken:  cfg.AccessToken,
+			RefreshToken: cfg.RefreshToken,
+		})
 		return nil
 	},
 }
@@ -38,7 +41,7 @@ func Execute() {
 
 func init() {
 	cobra.OnInitialize(initConfig)
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file ($HOME/.provcli)")
+	//rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file ($HOME/.provcli)")
 }
 
 func initConfig() {
