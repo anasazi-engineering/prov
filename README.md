@@ -38,4 +38,6 @@ Use the following command to add CLI commands to the project using the Cobra CLI
 
 Login does a combination of calling login endpoint with username and password and then asking 2FA TOTP token and calling the verify TOTP endpoint. On success, access and refresh tokens are received and stored locally in the `.provcli` configuration file.
 
-`$ ./prov login -u mgmillsa -p P@ssw0rd! -o org1` 
+`$ ./prov login -u mgmillsa -p P@ssw0rd! -o org1`
+
+`$ ./prov getdevices` 

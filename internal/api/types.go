@@ -11,3 +11,15 @@ type Credentials struct {
 	Password string
 	OrgID    string
 }
+
+type Device struct {
+	AgentID     string `json:"agent_id"`
+	AssgnRecipe string `json:"assigned_recipe"`
+	CreatedAt   int64  `json:"created_at"`
+}
+
+type jwtClaims struct {
+	Username  string `json:"user_id"`
+	OrgID     string `json:"org_id"`
+	ExpiresAt int64  `json:"exp"`
+}

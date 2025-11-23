@@ -14,12 +14,15 @@ import (
 	"time"
 
 	"prov/internal/config"
+
+	"github.com/spf13/viper"
 )
 
 type Client interface {
 	GetUser(ctx context.Context, id string) (*User, error)
 	ListUsers(ctx context.Context) ([]User, error)
 	Login(ctx context.Context, creds Credentials) (config.Tokens, error)
+	GetDevices() ([]Device, error)
 }
 
 type client struct {
@@ -90,6 +93,43 @@ func (c *client) addHeaders(req *http.Request) {
 		req.Header.Set("Authorization", "Bearer "+c.token.AccessToken)
 	}
 	req.Header.Set("Accept", "application/json")
+}
+
+// client.RefreshTokens() refreshes the access and refresh tokens using the
+// provided refresh token.
+func (c *client) RefreshTokens() error {
+	req, _ := http.NewRequest("POST", fmt.Sprintf("%s/auth/refresh", c.baseURL), nil)
+	var reqPayload struct {
+		RefreshToken string `json:"refresh_token"`
+	}
+	reqPayload.RefreshToken = c.token.RefreshToken
+	jsonBody, err := json.Marshal(reqPayload)
+	if err != nil {
+		return fmt.Errorf("failed to marshal payload: %v", err)
+	}
+	req.Body = io.NopCloser(bytes.NewReader(jsonBody))
+	res, err := c.http.Do(req)
+	if err != nil {
+		return err
+	}
+	defer res.Body.Close()
+
+	if res.StatusCode != http.StatusOK {
+		fmt.Println(res.Body)
+		return fmt.Errorf("Refresh error: %s\n", res.Body)
+	}
+
+	// Get new tokens from response
+	var tokens config.Tokens
+	if err := json.NewDecoder(res.Body).Decode(&tokens); err != nil {
+		return fmt.Errorf("Failed to parse refresh response: %v\n", err)
+	}
+	c.token = tokens
+	viper.Set("access_token", tokens.AccessToken)
+	viper.Set("refresh_token", tokens.RefreshToken)
+	viper.WriteConfig()
+
+	return nil
 }
 
 // client.Login() performs user login, including 2FA, and returns tokens on success
