@@ -45,3 +45,43 @@ func (c *client) GetDevices() ([]DeviceInfo, error) {
 
 	return devices, nil
 }
+
+// client.GetDevice() retrieves information for a specific device by AgentID
+func (c *client) GetDevice(devID string) (DeviceInfo, error) {
+	// Refresh tokens if needed
+	claims, err := c.RefreshTokens()
+	if err != nil {
+		log.Fatalf("Failed to refresh tokens, please re-login.\n%w\n", err)
+	}
+
+	// Call API to get devices
+	var device DeviceInfo
+	req, err := http.NewRequest("GET", fmt.Sprintf("%s/worker/%s/%s",
+		c.baseURL, claims.OrgID, devID), nil)
+	if err != nil {
+		return device, fmt.Errorf("failed to create request: %w", err)
+	}
+	c.addHeaders(req)
+	res, err := c.http.Do(req)
+	if err != nil {
+		return device, fmt.Errorf("API request failed: %w", err)
+	}
+	defer res.Body.Close()
+
+	if res.StatusCode != http.StatusOK {
+		log.Fatalf("Get device command failed.\n%w\n", res.StatusCode)
+	}
+
+	// Unmarshal response body into DeviceInfo slice
+	BodyBytes, err := io.ReadAll(res.Body)
+	//fmt.Printf(string(BodyBytes))
+	if err != nil {
+		log.Fatalf("Error reading from reader: %v", err)
+	}
+	err = json.Unmarshal(BodyBytes, &device)
+	if err != nil {
+		log.Fatalf("Error unmarshaling response body: %v", err)
+	}
+
+	return device, nil
+}

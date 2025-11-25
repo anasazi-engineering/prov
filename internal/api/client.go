@@ -24,6 +24,7 @@ type Client interface {
 	ListUsers(ctx context.Context) ([]User, error)
 	Login(ctx context.Context, creds Credentials) (config.Tokens, error)
 	GetDevices() ([]DeviceInfo, error)
+	GetDevice(devID string) (DeviceInfo, error)
 }
 
 type client struct {

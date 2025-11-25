@@ -33,6 +33,7 @@ to quickly create a Cobra application.`,
 			fmt.Printf("%s%16.14s%4.2d%22.19s\n",
 				device.AgentID, device.AssdRecipe, device.RecipeProgress, t)
 		}
+		fmt.Println("-------------------------------------------------------------------------------")
 		fmt.Println()
 	},
 }
