@@ -1,43 +1,47 @@
 package api
 
 import (
+	"encoding/json"
 	"fmt"
+	"io"
 	"log"
-	"time"
-
-	"github.com/golang-jwt/jwt/v5"
+	"net/http"
 )
 
 // client.GetDevices() retrieves all devices linked to organization
-func (c *client) GetDevices() ([]Device, error) {
-	var claims jwtClaims
-	token, _, err := jwt.NewParser().ParseUnverified(c.token.AccessToken, jwt.MapClaims{})
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse JWT: %w", err)
-	}
-	rawClaims, ok := token.Claims.(jwt.MapClaims)
-	if !ok {
-		return nil, fmt.Errorf("unable to convert claims to MapClaims")
-	}
-	claims.Username, _ = rawClaims.GetSubject()
-	claims.OrgID, _ = rawClaims["oid"].(string)
-	expAt, _ := rawClaims.GetExpirationTime()
-	claims.ExpiresAt = expAt.Unix()
-
-	// TODO: need to also check if Refresh token is expired
-
+func (c *client) GetDevices() ([]DeviceInfo, error) {
 	// Refresh tokens if needed
-	now := time.Now().Unix()
-	if claims.ExpiresAt < now {
-		log.Println("Access token expired, refreshing tokens...") // TODO: remove
-		err := c.RefreshTokens()
-		if err != nil {
-			return nil, fmt.Errorf("Failed to refresh tokens: %w", err)
-		}
-	} else {
-		log.Println("Access token valid, proceeding with API call...") // TODO: remove
+	claims, err := c.RefreshTokens()
+	if err != nil {
+		log.Fatalf("Failed to refresh tokens, please re-login.\n%w\n", err)
 	}
 
-	var devs []Device
-	return devs, nil
+	// Call API to get devices
+	req, err := http.NewRequest("GET", fmt.Sprintf("%s/worker/%s", c.baseURL, claims.OrgID), nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create request: %w", err)
+	}
+	c.addHeaders(req)
+	res, err := c.http.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("API request failed: %w", err)
+	}
+	defer res.Body.Close()
+
+	if res.StatusCode != http.StatusOK {
+		log.Fatalf("Get devices command failed.\n%w\n", res.StatusCode)
+	}
+
+	// Unmarshal response body into DeviceInfo slice
+	BodyBytes, err := io.ReadAll(res.Body)
+	if err != nil {
+		log.Fatalf("Error reading from reader: %v", err)
+	}
+	var devices []DeviceInfo
+	err = json.Unmarshal(BodyBytes, &devices)
+	if err != nil {
+		log.Fatalf("Error unmarshaling response body: %v", err)
+	}
+
+	return devices, nil
 }

@@ -5,6 +5,7 @@ package cmd
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/spf13/cobra"
 )
@@ -20,8 +21,19 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("getdevices called")
-		apiClient.GetDevices()
+		devices, err := apiClient.GetDevices()
+		if err != nil {
+			fmt.Printf("Error getting devices: %v\n", err)
+			return
+		}
+		fmt.Println("\n  AgentID                             Recipe          %    Date Joined")
+		fmt.Println("-------------------------------------------------------------------------------")
+		for _, device := range devices {
+			t := time.Unix(device.CreatedAt, 0).Format(time.RFC822)
+			fmt.Printf("%s%16.14s%4.2d%22.19s\n",
+				device.AgentID, device.AssdRecipe, device.RecipeProgress, t)
+		}
+		fmt.Println()
 	},
 }
 

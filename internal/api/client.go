@@ -15,6 +15,7 @@ import (
 
 	"prov/internal/config"
 
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/spf13/viper"
 )
 
@@ -22,7 +23,7 @@ type Client interface {
 	GetUser(ctx context.Context, id string) (*User, error)
 	ListUsers(ctx context.Context) ([]User, error)
 	Login(ctx context.Context, creds Credentials) (config.Tokens, error)
-	GetDevices() ([]Device, error)
+	GetDevices() ([]DeviceInfo, error)
 }
 
 type client struct {
@@ -97,7 +98,46 @@ func (c *client) addHeaders(req *http.Request) {
 
 // client.RefreshTokens() refreshes the access and refresh tokens using the
 // provided refresh token.
-func (c *client) RefreshTokens() error {
+func (c *client) RefreshTokens() (jwtClaims, error) {
+	// Get JWT claims from access token
+	var claims jwtClaims
+	now := time.Now().Unix()
+	token, _, err := jwt.NewParser().ParseUnverified(c.token.AccessToken, jwt.MapClaims{})
+	if err != nil {
+		return jwtClaims{}, fmt.Errorf("failed to parse JWT: %w", err)
+	}
+	rawClaims, ok := token.Claims.(jwt.MapClaims)
+	if !ok {
+		return jwtClaims{}, fmt.Errorf("unable to convert claims to MapClaims")
+	}
+	claims.Username, _ = rawClaims.GetSubject()
+	claims.OrgID, _ = rawClaims["oid"].(string)
+	expAt, _ := rawClaims.GetExpirationTime()
+	claims.ExpiresAt = expAt.Unix()
+
+	// If access token is still valid, return existing claims
+	if claims.ExpiresAt > now {
+		return claims, nil
+	}
+
+	// Return with error if refresh token is expired
+	token, _, err = jwt.NewParser().ParseUnverified(c.token.RefreshToken, jwt.MapClaims{})
+	if err != nil {
+		return jwtClaims{}, fmt.Errorf("failed to parse JWT: %w", err)
+	}
+	rawClaims, ok = token.Claims.(jwt.MapClaims)
+	if !ok {
+		return jwtClaims{}, fmt.Errorf("unable to convert claims to MapClaims")
+	}
+	expAt, _ = rawClaims.GetExpirationTime()
+	claims.ExpiresAt = expAt.Unix()
+
+	// Check if refresh token is expired
+	if claims.ExpiresAt < now {
+		return claims, fmt.Errorf("Refresh token expired, need to re-login")
+	}
+
+	// Configure request
 	req, _ := http.NewRequest("POST", fmt.Sprintf("%s/auth/refresh", c.baseURL), nil)
 	var reqPayload struct {
 		RefreshToken string `json:"refresh_token"`
@@ -105,31 +145,31 @@ func (c *client) RefreshTokens() error {
 	reqPayload.RefreshToken = c.token.RefreshToken
 	jsonBody, err := json.Marshal(reqPayload)
 	if err != nil {
-		return fmt.Errorf("failed to marshal payload: %v", err)
+		return jwtClaims{}, fmt.Errorf("failed to marshal payload: %v", err)
 	}
 	req.Body = io.NopCloser(bytes.NewReader(jsonBody))
 	res, err := c.http.Do(req)
 	if err != nil {
-		return err
+		return jwtClaims{}, err
 	}
 	defer res.Body.Close()
 
 	if res.StatusCode != http.StatusOK {
 		fmt.Println(res.Body)
-		return fmt.Errorf("Refresh error: %s\n", res.Body)
+		return jwtClaims{}, fmt.Errorf("Refresh error: %s\n", res.Body)
 	}
 
 	// Get new tokens from response
 	var tokens config.Tokens
 	if err := json.NewDecoder(res.Body).Decode(&tokens); err != nil {
-		return fmt.Errorf("Failed to parse refresh response: %v\n", err)
+		return jwtClaims{}, fmt.Errorf("Failed to parse refresh response: %v\n", err)
 	}
 	c.token = tokens
 	viper.Set("access_token", tokens.AccessToken)
 	viper.Set("refresh_token", tokens.RefreshToken)
 	viper.WriteConfig()
 
-	return nil
+	return claims, nil
 }
 
 // client.Login() performs user login, including 2FA, and returns tokens on success
