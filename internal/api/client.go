@@ -25,6 +25,7 @@ type Client interface {
 	Login(ctx context.Context, creds Credentials) (config.Tokens, error)
 	GetDevices() ([]DeviceInfo, error)
 	GetDevice(devID string) (DeviceInfo, error)
+	Logout(ctx context.Context) error
 }
 
 type client struct {
@@ -259,6 +260,28 @@ func (c *client) Login(ctx context.Context, creds Credentials) (config.Tokens, e
 	}
 
 	return tokens, nil
+}
+
+func (c *client) Logout(ctx context.Context) error {
+	req, _ := http.NewRequestWithContext(ctx, "POST", fmt.Sprintf("%s/auth/logout", c.baseURL), nil)
+	c.addHeaders(req)
+
+	res, err := c.http.Do(req)
+	if err != nil {
+		return err
+	}
+	defer res.Body.Close()
+
+	// Clear local tokens
+	viper.Set("access_token", "")
+	viper.Set("refresh_token", "")
+	viper.WriteConfig()
+
+	if res.StatusCode != http.StatusOK {
+		return fmt.Errorf("Logout error: \n%s\n", res.Status)
+	}
+
+	return nil
 }
 
 // ReadString() prompts the user for input and returns a sanitized string.
