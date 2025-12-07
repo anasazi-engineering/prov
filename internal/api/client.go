@@ -26,6 +26,7 @@ type Client interface {
 	GetDevices() ([]DeviceInfo, error)
 	GetDevice(devID string) (DeviceInfo, error)
 	Logout(ctx context.Context) error
+	AuthBootBox(ctx context.Context, otp string) error
 }
 
 type client struct {

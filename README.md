@@ -41,3 +41,11 @@ Login does a combination of calling login endpoint with username and password an
 `$ ./prov login -u mgmillsa -p P@ssw0rd! -o org1`
 
 `$ ./prov getdevices` 
+
+### Logout
+
+`$ ./prov logout` 
+
+## Authorize BootBox
+
+`$ ./prov authbb ABC123` 

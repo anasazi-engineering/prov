@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -84,4 +85,27 @@ func (c *client) GetDevice(devID string) (DeviceInfo, error) {
 	}
 
 	return device, nil
+}
+
+// client.AuthBootBox() authorizes a BootBox using the provided OTP
+func (c *client) AuthBootBox(ctx context.Context, otp string) error {
+	// Configure request
+	url := fmt.Sprintf("%s/device/auth/%s", c.baseURL, otp)
+	req, err := http.NewRequestWithContext(ctx, "POST", url, nil)
+	if err != nil {
+		return fmt.Errorf("failed to create login request: %v", err)
+	}
+	c.addHeaders(req)
+
+	// Make OTP request
+	res, err := c.http.Do(req)
+	if err != nil {
+		return fmt.Errorf("API request failed: %w", err)
+	}
+	defer res.Body.Close()
+	if res.StatusCode != http.StatusOK {
+		log.Fatalf("Command failed.\n%w\n", res.StatusCode)
+	}
+
+	return nil
 }
