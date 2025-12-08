@@ -21,7 +21,7 @@ import (
 
 type Client interface {
 	GetUser(ctx context.Context, id string) (*User, error)
-	ListUsers(ctx context.Context) ([]User, error)
+	GetUsers(ctx context.Context) ([]User, error)
 	Login(ctx context.Context, creds Credentials) (config.Tokens, error)
 	GetDevices() ([]DeviceInfo, error)
 	GetDevice(devID string) (DeviceInfo, error)
@@ -71,7 +71,7 @@ func (c *client) GetUser(ctx context.Context, id string) (*User, error) {
 	return &user, nil
 }
 
-func (c *client) ListUsers(ctx context.Context) ([]User, error) {
+func (c *client) GetUsers(ctx context.Context) ([]User, error) {
 	req, _ := http.NewRequestWithContext(ctx, "GET", fmt.Sprintf("%s/users", c.baseURL), nil)
 	c.addHeaders(req)
 
