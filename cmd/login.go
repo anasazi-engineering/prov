@@ -1,6 +1,13 @@
 /*
-Copyright © 2025 NAME HERE <EMAIL ADDRESS>
-*/
+ * Anasazi Precision Engineering LLC CONFIDENTIAL
+ *
+ * Unpublished Copyright (c) 2025 Anasazi Precision Engineering LLC. All Rights Reserved.
+ *
+ * Proprietary to Anasazi Precision Engineering LLC and may be covered by patents, patents
+ * in process, and trade secret or copyright law. Dissemination of this information or
+ * reproduction of this material is strictly forbidden unless prior written
+ * permission is obtained from Anasazi Precision Engineering LLC.
+ */
 package cmd
 
 import (
@@ -19,8 +26,7 @@ import (
 var loginCmd = &cobra.Command{
 	Use:   "login",
 	Short: "Login to Provisioner API server",
-	Long: `
-The 'login' subcommand is used to login to Provisioner API server.
+	Long: `Login is used to log a user in to Provisioner API server.
 The user will be prompted to enter their username, pasword, and 
 2FA token from their Authenticator app. On success, a session token
 will be stored in the user's config file for future requests.`,
@@ -32,7 +38,7 @@ will be stored in the user's config file for future requests.`,
 		creds.Password, _ = cmd.Flags().GetString("password")
 		creds.OrgID, _ = cmd.Flags().GetString("org-id")
 		if creds.Username == "" || creds.Password == "" || creds.OrgID == "" {
-			fmt.Println("\n** username, password, and org-id are required **\n")
+			fmt.Printf("\n** username, password, and org-id are required **\n\n")
 			cmd.Help()
 			os.Exit(0)
 		}

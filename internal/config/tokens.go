@@ -1,3 +1,13 @@
+/*
+ * Anasazi Precision Engineering LLC CONFIDENTIAL
+ *
+ * Unpublished Copyright (c) 2025 Anasazi Precision Engineering LLC. All Rights Reserved.
+ *
+ * Proprietary to Anasazi Precision Engineering LLC and may be covered by patents, patents
+ * in process, and trade secret or copyright law. Dissemination of this information or
+ * reproduction of this material is strictly forbidden unless prior written
+ * permission is obtained from Anasazi Precision Engineering LLC.
+ */
 package config
 
 type Tokens struct {
@@ -10,28 +20,3 @@ type Configuration struct {
 	AccessToken  string `json:"access_token"`
 	RefreshToken string `json:"refresh_token"`
 }
-
-// // TODO: Create functions to save/load tokens from secure storage
-// func LoadTokens() Tokens {
-// 	// Placeholder implementation
-// 	// On error, assume tokens are not available so create empty Tokens struct
-
-// 	return Tokens{}
-// }
-
-// func StoreTokens(tokens Tokens) error {
-
-// 	// Read existing configuration file to get base_url, or should I just use current config?
-// 	//var cfg Configuration
-
-// 	// Get config name from Viper
-// 	cfgFile := viper.ConfigFileUsed()
-// 	if cfgFile == "" {
-// 		return errors.New("no configuration file found to store tokens")
-// 	}
-
-// 	//fileType := viper.
-
-// 	// Placeholder implementation
-// 	return nil
-// }

@@ -1,6 +1,13 @@
 /*
-Copyright © 2025 NAME HERE <EMAIL ADDRESS>
-*/
+ * Anasazi Precision Engineering LLC CONFIDENTIAL
+ *
+ * Unpublished Copyright (c) 2025 Anasazi Precision Engineering LLC. All Rights Reserved.
+ *
+ * Proprietary to Anasazi Precision Engineering LLC and may be covered by patents, patents
+ * in process, and trade secret or copyright law. Dissemination of this information or
+ * reproduction of this material is strictly forbidden unless prior written
+ * permission is obtained from Anasazi Precision Engineering LLC.
+ */
 package cmd
 
 import (
@@ -13,14 +20,13 @@ import (
 
 // getdeviceCmd represents the getdevice command
 var getdeviceCmd = &cobra.Command{
-	Use:   "getdevice",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+	Use:   "getdevice <agent ID>",
+	Short: "Get specific device details",
+	Long: `
+Get details of a specific device by providing its AgentID.
+This command retrieves information such as the device's 
+friendly name, assigned recipe, recipe progress, date
+joined, and last seen timestamp.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println()
 		if len(args) < 1 {
@@ -46,14 +52,4 @@ to quickly create a Cobra application.`,
 
 func init() {
 	rootCmd.AddCommand(getdeviceCmd)
-
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// getdeviceCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// getdeviceCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }

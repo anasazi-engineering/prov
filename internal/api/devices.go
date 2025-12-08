@@ -1,3 +1,13 @@
+/*
+ * Anasazi Precision Engineering LLC CONFIDENTIAL
+ *
+ * Unpublished Copyright (c) 2025 Anasazi Precision Engineering LLC. All Rights Reserved.
+ *
+ * Proprietary to Anasazi Precision Engineering LLC and may be covered by patents, patents
+ * in process, and trade secret or copyright law. Dissemination of this information or
+ * reproduction of this material is strictly forbidden unless prior written
+ * permission is obtained from Anasazi Precision Engineering LLC.
+ */
 package api
 
 import (
@@ -14,7 +24,7 @@ func (c *client) GetDevices() ([]DeviceInfo, error) {
 	// Refresh tokens if needed
 	claims, err := c.RefreshTokens()
 	if err != nil {
-		log.Fatalf("Failed to refresh tokens, please re-login.\n%w\n", err)
+		log.Fatalf("Failed to refresh tokens, please re-login.\n%v\n", err)
 	}
 
 	// Call API to get devices
@@ -30,7 +40,7 @@ func (c *client) GetDevices() ([]DeviceInfo, error) {
 	defer res.Body.Close()
 
 	if res.StatusCode != http.StatusOK {
-		log.Fatalf("Get devices command failed.\n%w\n", res.StatusCode)
+		log.Fatalf("Get devices command failed.\n%v\n", res.StatusCode)
 	}
 
 	// Unmarshal response body into DeviceInfo slice
@@ -52,7 +62,7 @@ func (c *client) GetDevice(devID string) (DeviceInfo, error) {
 	// Refresh tokens if needed
 	claims, err := c.RefreshTokens()
 	if err != nil {
-		log.Fatalf("Failed to refresh tokens, please re-login.\n%w\n", err)
+		log.Fatalf("Failed to refresh tokens, please re-login.\n%v\n", err)
 	}
 
 	// Call API to get devices
@@ -70,7 +80,7 @@ func (c *client) GetDevice(devID string) (DeviceInfo, error) {
 	defer res.Body.Close()
 
 	if res.StatusCode != http.StatusOK {
-		log.Fatalf("Get device command failed.\n%w\n", res.StatusCode)
+		log.Fatalf("Get device command failed.\n%v\n", res.StatusCode)
 	}
 
 	// Unmarshal response body into DeviceInfo slice
@@ -104,7 +114,7 @@ func (c *client) AuthBootBox(ctx context.Context, otp string) error {
 	}
 	defer res.Body.Close()
 	if res.StatusCode != http.StatusOK {
-		log.Fatalf("Command failed.\n%w\n", res.StatusCode)
+		log.Fatalf("Command failed.\n%v\n", res.StatusCode)
 	}
 
 	return nil

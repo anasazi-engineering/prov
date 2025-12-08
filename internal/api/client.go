@@ -1,3 +1,13 @@
+/*
+ * Anasazi Precision Engineering LLC CONFIDENTIAL
+ *
+ * Unpublished Copyright (c) 2025 Anasazi Precision Engineering LLC. All Rights Reserved.
+ *
+ * Proprietary to Anasazi Precision Engineering LLC and may be covered by patents, patents
+ * in process, and trade secret or copyright law. Dissemination of this information or
+ * reproduction of this material is strictly forbidden unless prior written
+ * permission is obtained from Anasazi Precision Engineering LLC.
+ */
 package api
 
 import (
@@ -27,6 +37,7 @@ type Client interface {
 	GetDevice(devID string) (DeviceInfo, error)
 	Logout(ctx context.Context) error
 	AuthBootBox(ctx context.Context, otp string) error
+	ApplyRecipe(ctx context.Context, agegntID string, url string) error
 }
 
 type client struct {
@@ -137,7 +148,7 @@ func (c *client) RefreshTokens() (jwtClaims, error) {
 
 	// Check if refresh token is expired
 	if claims.ExpiresAt < now {
-		return claims, fmt.Errorf("Refresh token expired, need to re-login")
+		return claims, fmt.Errorf("refresh token expired, need to re-login")
 	}
 
 	// Configure request
@@ -159,13 +170,13 @@ func (c *client) RefreshTokens() (jwtClaims, error) {
 
 	if res.StatusCode != http.StatusOK {
 		fmt.Println(res.Body)
-		return jwtClaims{}, fmt.Errorf("Refresh error: %s\n", res.Body)
+		return jwtClaims{}, fmt.Errorf("refresh error: %s", res.Body)
 	}
 
 	// Get new tokens from response
 	var tokens config.Tokens
 	if err := json.NewDecoder(res.Body).Decode(&tokens); err != nil {
-		return jwtClaims{}, fmt.Errorf("Failed to parse refresh response: %v\n", err)
+		return jwtClaims{}, fmt.Errorf("failed to parse refresh response: %v", err)
 	}
 	c.token = tokens
 	viper.Set("access_token", tokens.AccessToken)
@@ -257,7 +268,7 @@ func (c *client) Login(ctx context.Context, creds Credentials) (config.Tokens, e
 	// Process tokens from response
 	var tokens config.Tokens
 	if err := json.NewDecoder(res.Body).Decode(&tokens); err != nil {
-		fmt.Errorf("failed to parse login response: %v", err)
+		return config.Tokens{}, fmt.Errorf("failed to parse login response: %v", err)
 	}
 
 	return tokens, nil
@@ -279,7 +290,30 @@ func (c *client) Logout(ctx context.Context) error {
 	viper.WriteConfig()
 
 	if res.StatusCode != http.StatusOK {
-		return fmt.Errorf("Logout error: \n%s\n", res.Status)
+		return fmt.Errorf("Logout error: \n%s", res.Status)
+	}
+
+	return nil
+}
+
+// Client.ApplyRecipe() is used to apply a recipe to a Worker device.
+func (c *client) ApplyRecipe(ctx context.Context, agegntID string, url string) error {
+	req, _ := http.NewRequestWithContext(ctx, "POST", fmt.Sprintf("%s/auth/logout", c.baseURL), nil)
+	c.addHeaders(req)
+
+	res, err := c.http.Do(req)
+	if err != nil {
+		return err
+	}
+	defer res.Body.Close()
+
+	// Clear local tokens
+	viper.Set("access_token", "")
+	viper.Set("refresh_token", "")
+	viper.WriteConfig()
+
+	if res.StatusCode != http.StatusOK {
+		return fmt.Errorf("Logout error: \n%s", res.Status)
 	}
 
 	return nil
