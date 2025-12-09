@@ -54,12 +54,3 @@ Login does a combination of calling login endpoint with username and password an
 
 `$ ./prov provision --node <agentID> --url <>` 
 `$ ./prov provision -n <agentID> -u <>` 
-
-
-short: Apply recipe to node
-
-long: 
-The provision command is used to select a recipe
-that will be used to provision the device specific.
-The command requires the node's agentID and the URL
-for the recipe to be applied.

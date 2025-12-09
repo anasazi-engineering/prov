@@ -18,6 +18,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"os"
 	"strings"
@@ -298,22 +299,45 @@ func (c *client) Logout(ctx context.Context) error {
 
 // Client.ApplyRecipe() is used to apply a recipe to a Worker device.
 func (c *client) ApplyRecipe(ctx context.Context, agegntID string, url string) error {
-	req, _ := http.NewRequestWithContext(ctx, "POST", fmt.Sprintf("%s/auth/logout", c.baseURL), nil)
+	// Refresh tokens if needed
+	claims, err := c.RefreshTokens()
+	if err != nil {
+		log.Fatalf("Failed to refresh tokens, please re-login.\n%v\n", err)
+	}
+
+	// Configure request
+	req, _ := http.NewRequestWithContext(ctx, "POST", fmt.Sprintf("%s/device/%s/%s/command",
+		c.baseURL, claims.OrgID, agegntID), nil)
 	c.addHeaders(req)
 
+	//curl -X POST -H "Content-Type: application/json"
+	//   -d '{"method":"APPLY_RECIPE", "payload":{"url":"http://www.yayteam.com"}}'
+	//   -H 'Authorization: {"username":"mgmillsa", "org_id":"org1"}'
+	//   localhost:8000/api/v1/device/org1/1230a3b5-5d5d-4f6a-b87e-19cf1ce08511/command
+
+	// Create request payload
+	var reqPayload struct {
+		Method  string `json:"method"`
+		Payload struct {
+			URL string `json:"url"`
+		} `json:"payload"`
+	}
+	reqPayload.Method = "APPLY_RECIPE"
+	reqPayload.Payload.URL = url
+	jsonBody, err := json.Marshal(reqPayload)
+	if err != nil {
+		return fmt.Errorf("failed to create ApplyRecipe request: %v", err)
+	}
+	req.Body = io.NopCloser(bytes.NewReader(jsonBody))
+
+	// Make API request
 	res, err := c.http.Do(req)
 	if err != nil {
 		return err
 	}
 	defer res.Body.Close()
-
-	// Clear local tokens
-	viper.Set("access_token", "")
-	viper.Set("refresh_token", "")
-	viper.WriteConfig()
-
 	if res.StatusCode != http.StatusOK {
-		return fmt.Errorf("Logout error: \n%s", res.Status)
+		return fmt.Errorf("provisioning error: \n%s", res.Status)
 	}
 
 	return nil
