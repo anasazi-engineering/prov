@@ -52,5 +52,6 @@ Login does a combination of calling login endpoint with username and password an
 
 ## Apply Recipe
 
-`$ ./prov provision --node <agentID> --url <>` 
-`$ ./prov provision -n <agentID> -u <>` 
+`$ ./prov provision --worker <agentID> --url <>` 
+`$ ./prov provision -w <agentID> -u <>` 
+`$ ./prov provision -w ABC123 -u "http://github.com/my-recipe"` 
