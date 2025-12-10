@@ -28,7 +28,9 @@ func Load(cfgFile string) (*Config, error) {
 		return nil, err
 	}
 	if cfg.BaseURL == "" {
-		return nil, errors.New("base_url must be configured")
+		return nil, errors.New(`
+		The Provisioner API Server base URL (base_url) must be configured
+		in .provcli located in $HOME directory. See README for details.`)
 	}
 	return &cfg, nil
 }

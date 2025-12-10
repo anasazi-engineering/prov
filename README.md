@@ -1,29 +1,13 @@
-### Configuration File
+# Build and Configure
 
-Create JSOn configuration file with 'base_url' parameter and save as: `$HOME/.provcli`
+## Build
 
-## Project File Structure
+`$ go build .`
 
+## Configuration File
 
+Create JSON configuration file  (see example) with the Provisioner API Server base URL ('base_url') parameter and save as: `$HOME/.provcli`. 
 
-
-``` code
-├── cmd/
-│   ├── root.go
-│   ├── login.go
-│   ├── user.go
-│   ├── user_get.go
-│   └── user_list.go
-├── internal/
-│   ├── api/
-│   │   ├── client.go
-│   │   └── types.go
-│   └── config/
-│       ├── config.go
-│       └── tokens.go
-├── go.mod
-└── main.go
-```
 
 ### Adding Commands
 

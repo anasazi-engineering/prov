@@ -28,12 +28,27 @@ or on the command line during debug.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		ctx, cancel := context.WithTimeout(context.Background(), 8*time.Second)
 		defer cancel()
-		fmt.Println("authbb called")
-		err := apiClient.AuthBootBox(ctx, args[0])
-		if err != nil {
-			fmt.Printf("Error gauthorizing BootBox: %v\n", err)
+
+		// Validate that an OTP argument is provided
+		if len(args) < 1 {
+			fmt.Println("\nError: OTP argument is required\n")
+			// output usage information
+			cmd.Usage()
+			return
+		} else if len(args) > 1 {
+			fmt.Println("\nError: Too many arguments provided. Only the OTP is required.\n")
+			// output usage information
+			cmd.Usage()
 			return
 		}
+
+		// Call the API client to authorize the BootBox with the provided OTP
+		err := apiClient.AuthBootBox(ctx, args[0])
+		if err != nil {
+			fmt.Printf("Error authorizing BootBox: %v\n", err)
+			return
+		}
+		fmt.Printf("OTP: %s authorized\n\n", args[0])
 
 	},
 }

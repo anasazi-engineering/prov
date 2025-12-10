@@ -27,7 +27,7 @@ var (
 )
 
 var rootCmd = &cobra.Command{
-	Use:   "prov",
+	Use:   "prov <command>",
 	Short: "CLI for ProvisionerAPI server",
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 		cfg, err := config.Load(cfgFile)
@@ -51,7 +51,6 @@ func Execute() {
 
 func init() {
 	cobra.OnInitialize(initConfig)
-	//rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file ($HOME/.provcli)")
 }
 
 func initConfig() {
