@@ -50,4 +50,7 @@ func init() {
 	rootCmd.AddCommand(provisionCmd)
 	provisionCmd.Flags().StringP("worker", "w", "", "Agent ID for Worker to provision")
 	provisionCmd.Flags().StringP("url", "u", "", "URL for recipe")
+
+	provisionCmd.MarkFlagRequired("worker")
+	provisionCmd.MarkFlagRequired("url")
 }
