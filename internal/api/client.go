@@ -31,12 +31,12 @@ import (
 )
 
 type Client interface {
-	GetUser(ctx context.Context, id string) (*User, error)
-	GetUsers(ctx context.Context) ([]User, error)
 	Login(ctx context.Context, creds Credentials) (config.Tokens, error)
-	GetDevices() ([]DeviceInfo, error)
-	GetDevice(devID string) (DeviceInfo, error)
 	Logout(ctx context.Context) error
+	GetWorkers() ([]DeviceInfo, error)
+	GetWorker(devID string) (DeviceInfo, error)
+	GetBootboxes() ([]DeviceInfo, error)
+	GetBootbox(devID string) (DeviceInfo, error)
 	AuthBootBox(ctx context.Context, otp string) error
 	ApplyRecipe(ctx context.Context, agegntID string, url string) error
 }
@@ -48,8 +48,6 @@ type client struct {
 }
 
 func NewClient(baseURL string, tokens config.Tokens) Client {
-	//tokens := config.LoadTokens()
-
 	return &client{
 		baseURL: baseURL,
 		token:   tokens,
@@ -57,51 +55,6 @@ func NewClient(baseURL string, tokens config.Tokens) Client {
 			Timeout: 10 * time.Second,
 		},
 	}
-}
-
-func (c *client) GetUser(ctx context.Context, id string) (*User, error) {
-	req, _ := http.NewRequestWithContext(ctx, "GET", fmt.Sprintf("%s/users/%s", c.baseURL, id), nil)
-	c.addHeaders(req)
-
-	res, err := c.http.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	defer res.Body.Close()
-
-	if res.StatusCode == http.StatusNotFound {
-		return nil, errors.New("user not found")
-	}
-	if res.StatusCode >= 400 {
-		return nil, fmt.Errorf("API error: %s", res.Status)
-	}
-
-	var user User
-	if err := json.NewDecoder(res.Body).Decode(&user); err != nil {
-		return nil, err
-	}
-	return &user, nil
-}
-
-func (c *client) GetUsers(ctx context.Context) ([]User, error) {
-	req, _ := http.NewRequestWithContext(ctx, "GET", fmt.Sprintf("%s/users", c.baseURL), nil)
-	c.addHeaders(req)
-
-	res, err := c.http.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	defer res.Body.Close()
-
-	if res.StatusCode >= 400 {
-		return nil, fmt.Errorf("API error: %s", res.Status)
-	}
-
-	var users []User
-	if err := json.NewDecoder(res.Body).Decode(&users); err != nil {
-		return nil, err
-	}
-	return users, nil
 }
 
 func (c *client) addHeaders(req *http.Request) {

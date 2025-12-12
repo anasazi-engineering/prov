@@ -17,15 +17,15 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// getdevicesCmd represents the getdevices command
-var getdevicesCmd = &cobra.Command{
-	Use:   "getdevices",
-	Short: "List authorized devices",
+// getworkersCmd represents the getworkers command
+var getworkersCmd = &cobra.Command{
+	Use:   "getworkers",
+	Short: "List authorized Worker devices",
 	Long: `List devices that have been authorized to
 connect the server. Devices may or may not
 have been assigned a recipe yet.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		devices, err := apiClient.GetDevices()
+		devices, err := apiClient.GetWorkers()
 		if err != nil {
 			fmt.Printf("Error getting devices: %v\n", err)
 			return
@@ -43,5 +43,5 @@ have been assigned a recipe yet.`,
 }
 
 func init() {
-	rootCmd.AddCommand(getdevicesCmd)
+	rootCmd.AddCommand(getworkersCmd)
 }

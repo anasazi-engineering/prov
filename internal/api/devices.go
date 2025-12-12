@@ -19,12 +19,12 @@ import (
 	"net/http"
 )
 
-// client.GetDevices() retrieves all devices linked to organization
-func (c *client) GetDevices() ([]DeviceInfo, error) {
+// client.GetWorkers() retrieves all devices linked to organization
+func (c *client) GetWorkers() ([]DeviceInfo, error) {
 	// Refresh tokens if needed
 	claims, err := c.RefreshTokens()
 	if err != nil {
-		log.Fatalf("Failed to refresh tokens, please re-login.\n%v\n", err)
+		return nil, fmt.Errorf("Failed to refresh tokens, please re-login.%w", err)
 	}
 
 	// Call API to get devices
@@ -40,29 +40,29 @@ func (c *client) GetDevices() ([]DeviceInfo, error) {
 	defer res.Body.Close()
 
 	if res.StatusCode != http.StatusOK {
-		log.Fatalf("Get devices command failed.\n%v\n", res.StatusCode)
+		return nil, fmt.Errorf("Get workers command failed, status code: %w", res.StatusCode)
 	}
 
 	// Unmarshal response body into DeviceInfo slice
 	BodyBytes, err := io.ReadAll(res.Body)
 	if err != nil {
-		log.Fatalf("Error reading from reader: %v", err)
+		return nil, fmt.Errorf("Error reading from reader: %v", err)
 	}
 	var devices []DeviceInfo
 	err = json.Unmarshal(BodyBytes, &devices)
 	if err != nil {
-		log.Fatalf("Error unmarshaling response body: %v", err)
+		return nil, fmt.Errorf("Error unmarshaling response body: %w", err)
 	}
 
 	return devices, nil
 }
 
-// client.GetDevice() retrieves information for a specific device by AgentID
-func (c *client) GetDevice(devID string) (DeviceInfo, error) {
+// client.GetWorker() retrieves information for a specific device by AgentID
+func (c *client) GetWorker(devID string) (DeviceInfo, error) {
 	// Refresh tokens if needed
 	claims, err := c.RefreshTokens()
 	if err != nil {
-		log.Fatalf("Failed to refresh tokens, please re-login.\n%v\n", err)
+		return DeviceInfo{}, fmt.Errorf("Failed to refresh tokens, please re-login.%w", err)
 	}
 
 	// Call API to get devices
@@ -80,18 +80,94 @@ func (c *client) GetDevice(devID string) (DeviceInfo, error) {
 	defer res.Body.Close()
 
 	if res.StatusCode != http.StatusOK {
-		log.Fatalf("Get device command failed.\n%v\n", res.StatusCode)
+		return device, fmt.Errorf("Get worker command failed, status code: %v", res.StatusCode)
 	}
 
 	// Unmarshal response body into DeviceInfo slice
 	BodyBytes, err := io.ReadAll(res.Body)
-	//fmt.Printf(string(BodyBytes))
 	if err != nil {
-		log.Fatalf("Error reading from reader: %v", err)
+		return DeviceInfo{}, fmt.Errorf("Error reading from reader: %v", err)
 	}
 	err = json.Unmarshal(BodyBytes, &device)
 	if err != nil {
-		log.Fatalf("Error unmarshaling response body: %v", err)
+		return DeviceInfo{}, fmt.Errorf("Error unmarshaling response body: %v", err)
+	}
+
+	return device, nil
+}
+
+// client.GetBootboxes() retrieves all BootBoxes linked to organization
+func (c *client) GetBootboxes() ([]DeviceInfo, error) {
+	// Refresh tokens if needed
+	claims, err := c.RefreshTokens()
+	if err != nil {
+		return nil, fmt.Errorf("Failed to refresh tokens, please re-login.%w", err)
+	}
+
+	// Call API to get devices
+	req, err := http.NewRequest("GET", fmt.Sprintf("%s/bootbox/%s", c.baseURL, claims.OrgID), nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create request: %w", err)
+	}
+	c.addHeaders(req)
+	res, err := c.http.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("API request failed: %w", err)
+	}
+	defer res.Body.Close()
+
+	if res.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("Get bootboxes command failed, status code: %w", res.StatusCode)
+	}
+
+	// Unmarshal response body into DeviceInfo slice
+	BodyBytes, err := io.ReadAll(res.Body)
+	if err != nil {
+		return nil, fmt.Errorf("Error reading from reader: %v", err)
+	}
+	var devices []DeviceInfo
+	err = json.Unmarshal(BodyBytes, &devices)
+	if err != nil {
+		return nil, fmt.Errorf("Error unmarshaling response body: %w", err)
+	}
+
+	return devices, nil
+}
+
+// client.GetBootbox() retrieves information for a specific BootBox by AgentID
+func (c *client) GetBootbox(devID string) (DeviceInfo, error) {
+	// Refresh tokens if needed
+	claims, err := c.RefreshTokens()
+	if err != nil {
+		return DeviceInfo{}, fmt.Errorf("Failed to refresh tokens, please re-login.%w", err)
+	}
+
+	// Call API to get devices
+	var device DeviceInfo
+	req, err := http.NewRequest("GET", fmt.Sprintf("%s/bootbox/%s/%s",
+		c.baseURL, claims.OrgID, devID), nil)
+	if err != nil {
+		return device, fmt.Errorf("failed to create request: %w", err)
+	}
+	c.addHeaders(req)
+	res, err := c.http.Do(req)
+	if err != nil {
+		return device, fmt.Errorf("API request failed: %w", err)
+	}
+	defer res.Body.Close()
+
+	if res.StatusCode != http.StatusOK {
+		return device, fmt.Errorf("Get bootbox command failed, status code: %v", res.StatusCode)
+	}
+
+	// Unmarshal response body into DeviceInfo slice
+	BodyBytes, err := io.ReadAll(res.Body)
+	if err != nil {
+		return DeviceInfo{}, fmt.Errorf("Error reading from reader: %v", err)
+	}
+	err = json.Unmarshal(BodyBytes, &device)
+	if err != nil {
+		return DeviceInfo{}, fmt.Errorf("Error unmarshaling response body: %v", err)
 	}
 
 	return device, nil

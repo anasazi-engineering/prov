@@ -18,22 +18,21 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// getdeviceCmd represents the getdevice command
-var getdeviceCmd = &cobra.Command{
-	Use:   "getdevice <agent ID>",
+// getworkerCmd represents the getworker command
+var getworkerCmd = &cobra.Command{
+	Use:   "getworker <agent ID>",
 	Short: "Get specific device details",
-	Long: `
-Get details of a specific device by providing its AgentID.
-This command retrieves information such as the device's 
-friendly name, assigned recipe, recipe progress, date
-joined, and last seen timestamp.`,
+	Long: `Get details of a specific Worker device by providing its 
+AgentID. This command retrieves information such as the
+device's friendly name, assigned recipe, recipe progress,
+date joined, and last seen timestamp.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println()
 		if len(args) < 1 {
-			fmt.Println("Please provide the AgentID of the device.")
+			fmt.Println("Please provide the AgentID for the device.")
 			os.Exit(1)
 		}
-		device, err := apiClient.GetDevice(args[0])
+		device, err := apiClient.GetWorker(args[0])
 		if err != nil {
 			fmt.Printf("Error getting device: %v\n", err)
 			return
@@ -51,5 +50,5 @@ joined, and last seen timestamp.`,
 }
 
 func init() {
-	rootCmd.AddCommand(getdeviceCmd)
+	rootCmd.AddCommand(getworkerCmd)
 }
