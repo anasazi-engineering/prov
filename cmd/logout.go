@@ -12,6 +12,7 @@ package cmd
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"time"
 
@@ -32,6 +33,8 @@ and Refresh tokens will be removed from the local storage.`,
 		err := apiClient.Logout(ctx)
 		if err != nil {
 			log.Fatalf("User logout failed: %v\n", err)
+		} else {
+			fmt.Println("User logged out successfully")
 		}
 	},
 }

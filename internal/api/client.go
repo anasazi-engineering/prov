@@ -173,7 +173,7 @@ func (c *client) Login(ctx context.Context, creds Credentials) (config.Tokens, e
 	defer res.Body.Close()
 	if res.StatusCode != http.StatusAccepted {
 		fmt.Println(res.Body)
-		return config.Tokens{}, fmt.Errorf("API error: %s", res.Status)
+		return config.Tokens{}, fmt.Errorf("Login failed: %s", res.Status)
 	}
 
 	// Configure TOTP request
@@ -218,6 +218,10 @@ func (c *client) Login(ctx context.Context, creds Credentials) (config.Tokens, e
 		return config.Tokens{}, err
 	}
 	defer res.Body.Close()
+	if res.StatusCode != http.StatusOK {
+		fmt.Println(res.Body)
+		return config.Tokens{}, fmt.Errorf("TOTP verification failed: %s", res.Status)
+	}
 
 	// Process tokens from response
 	var tokens config.Tokens
