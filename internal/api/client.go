@@ -65,7 +65,7 @@ func (c *client) addHeaders(req *http.Request) {
 }
 
 // client.RefreshTokens() refreshes the access and refresh tokens using the
-// provided refresh token.
+// current refresh token.
 func (c *client) RefreshTokens() (jwtClaims, error) {
 	// Get JWT claims from access token
 	var claims jwtClaims
@@ -107,15 +107,14 @@ func (c *client) RefreshTokens() (jwtClaims, error) {
 
 	// Configure request
 	req, _ := http.NewRequest("POST", fmt.Sprintf("%s/auth/refresh", c.baseURL), nil)
-	var reqPayload struct {
-		RefreshToken string `json:"refresh_token"`
-	}
-	reqPayload.RefreshToken = c.token.RefreshToken
-	jsonBody, err := json.Marshal(reqPayload)
-	if err != nil {
-		return jwtClaims{}, fmt.Errorf("failed to marshal payload: %v", err)
-	}
-	req.Body = io.NopCloser(bytes.NewReader(jsonBody))
+
+	// Add refresh token to cookie
+	req.AddCookie(&http.Cookie{
+		Name:  "refresh_token",
+		Value: c.token.RefreshToken,
+	})
+
+	// Make refresh API request
 	res, err := c.http.Do(req)
 	if err != nil {
 		return jwtClaims{}, err
@@ -123,8 +122,8 @@ func (c *client) RefreshTokens() (jwtClaims, error) {
 	defer res.Body.Close()
 
 	if res.StatusCode != http.StatusOK {
-		fmt.Println(res.Body)
-		return jwtClaims{}, fmt.Errorf("refresh error: %s", res.Body)
+		bodyBytes, _ := io.ReadAll(res.Body)
+		return jwtClaims{}, fmt.Errorf("refresh error: %s", string(bodyBytes))
 	}
 
 	// Get new tokens from response
@@ -132,6 +131,19 @@ func (c *client) RefreshTokens() (jwtClaims, error) {
 	if err := json.NewDecoder(res.Body).Decode(&tokens); err != nil {
 		return jwtClaims{}, fmt.Errorf("failed to parse refresh response: %v", err)
 	}
+	// Get refresh token from Server response cookie
+	var refreshToken string
+	for _, cookie := range res.Cookies() {
+		if cookie.Name == "refresh_token" {
+			refreshToken = cookie.Value
+			break
+		}
+	}
+	if refreshToken == "" {
+		return jwtClaims{}, fmt.Errorf("Refresh Error: refresh token not found in refresh response")
+	}
+	tokens.RefreshToken = refreshToken
+
 	c.token = tokens
 	viper.Set("access_token", tokens.AccessToken)
 	viper.Set("refresh_token", tokens.RefreshToken)
@@ -228,6 +240,19 @@ func (c *client) Login(ctx context.Context, creds Credentials) (config.Tokens, e
 	if err := json.NewDecoder(res.Body).Decode(&tokens); err != nil {
 		return config.Tokens{}, fmt.Errorf("failed to parse login response: %v", err)
 	}
+
+	// Get refresh token from Server response cookie
+	var refreshToken string
+	for _, cookie := range res.Cookies() {
+		if cookie.Name == "refresh_token" {
+			refreshToken = cookie.Value
+			break
+		}
+	}
+	if refreshToken == "" {
+		return config.Tokens{}, fmt.Errorf("Login Error: refresh token not found in login response")
+	}
+	tokens.RefreshToken = refreshToken
 
 	return tokens, nil
 }
